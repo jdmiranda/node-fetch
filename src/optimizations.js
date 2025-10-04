@@ -64,17 +64,21 @@ const MAX_HEADER_CACHE_SIZE = 1000;
  * @returns {Object}
  */
 export function getCachedHeaders(key, factory) {
-	if (headerCache.has(key)) {
-		return {...headerCache.get(key)};
-	}
+    if (headerCache.has(key)) {
+        // touch for simple LRU behavior
+        const v = headerCache.get(key);
+        headerCache.delete(key);
+        headerCache.set(key, v);
+        return {...v};
+    }
 
 	const headers = factory();
 
-	if (headerCache.size >= MAX_HEADER_CACHE_SIZE) {
-		// Simple LRU: remove first item
-		const firstKey = headerCache.keys().next().value;
-		headerCache.delete(firstKey);
-	}
+    if (headerCache.size >= MAX_HEADER_CACHE_SIZE) {
+        // Simple LRU: remove first item
+        const firstKey = headerCache.keys().next().value;
+        headerCache.delete(firstKey);
+    }
 
 	headerCache.set(key, headers);
 	return {...headers};
@@ -128,17 +132,20 @@ const MAX_URL_CACHE_SIZE = 1000;
  * @returns {URL}
  */
 export function getOptimizedURL(url) {
-	if (url instanceof URL) {
-		return url;
-	}
+    if (url instanceof URL) {
+        return url;
+    }
 
 	const urlStr = String(url);
 
-	if (urlCache.has(urlStr)) {
-		const cached = urlCache.get(urlStr);
-		// Return a new URL object to avoid mutation
-		return new URL(cached.href);
-	}
+    if (urlCache.has(urlStr)) {
+        const cached = urlCache.get(urlStr);
+        // touch entry
+        urlCache.delete(urlStr);
+        urlCache.set(urlStr, cached);
+        // Return a new URL object to avoid mutation
+        return new URL(cached.href);
+    }
 
 	const parsedURL = new URL(urlStr);
 

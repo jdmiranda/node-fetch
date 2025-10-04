@@ -32,9 +32,11 @@ import {
 	blobFromSync,
 	blobFrom
 } from 'fetch-blob/from.js';
+import {getOptimizedAgent, clearOptimizationCaches, getOptimizationStats} from './optimizations.js';
 
 export {FormData, Headers, Request, Response, FetchError, AbortError, isRedirect};
 export {Blob, File, fileFromSync, fileFrom, blobFromSync, blobFrom};
+export {clearOptimizationCaches, getOptimizationStats};
 
 const supportedSchemas = new Set(['data:', 'http:', 'https:']);
 

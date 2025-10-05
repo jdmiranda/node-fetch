@@ -15,6 +15,7 @@ import {getSearch} from './utils/get-search.js';
 import {
 	validateReferrerPolicy, determineRequestsReferrer, DEFAULT_REFERRER_POLICY
 } from './utils/referrer.js';
+import {getOptimizedAgent} from './optimizations.js';
 
 const INTERNALS = Symbol('Request internals');
 
@@ -286,6 +287,11 @@ export const getNodeRequestOptions = request => {
 	let {agent} = request;
 	if (typeof agent === 'function') {
 		agent = agent(parsedURL);
+	}
+
+	// Use optimized agent with connection pooling if no custom agent specified
+	if (!agent) {
+		agent = getOptimizedAgent(parsedURL.protocol);
 	}
 
 	// HTTP-network fetch step 4.2

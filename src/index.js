@@ -32,9 +32,17 @@ import {
 	blobFromSync,
 	blobFrom
 } from 'fetch-blob/from.js';
+import {getOptimizedAgent, clearOptimizationCaches, getOptimizationStats} from './optimizations.js';
 
 export {FormData, Headers, Request, Response, FetchError, AbortError, isRedirect};
 export {Blob, File, fileFromSync, fileFrom, blobFromSync, blobFrom};
+export {clearOptimizationCaches, getOptimizationStats};
+
+// Optional: prefer native fetch (undici) on Node >= 18
+let preferNativeFetch = false;
+export function setPreferNativeFetch(enabled) {
+    preferNativeFetch = !!enabled;
+}
 
 const supportedSchemas = new Set(['data:', 'http:', 'https:']);
 
@@ -46,7 +54,10 @@ const supportedSchemas = new Set(['data:', 'http:', 'https:']);
  * @return  {Promise<import('./response').default>}
  */
 export default async function fetch(url, options_) {
-	return new Promise((resolve, reject) => {
+    if (preferNativeFetch && typeof globalThis.fetch === 'function') {
+        return globalThis.fetch(url, options_);
+    }
+    return new Promise((resolve, reject) => {
 		// Build request object
 		const request = new Request(url, options_);
 		const {parsedURL, options} = getNodeRequestOptions(request);
